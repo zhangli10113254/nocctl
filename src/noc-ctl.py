@@ -37,7 +37,7 @@ def load_all_command_module(path):
                     
     return command_modules
 
-def show_commands_in_context(all_command_module):
+def show_sub_commands(all_command_module):
     print 'Aavailable commands:\n'
     
     for command in all_command_module:
@@ -62,7 +62,7 @@ def find_command_module(all_command_module):
             print 'ERROR: command not found'
             break
     
-    show_commands_in_context(all_command_module)
+    show_sub_commands(all_command_module)
     return (None, None)
     
 def parse_and_set_args(command_instance, argv):
@@ -72,19 +72,19 @@ def parse_and_set_args(command_instance, argv):
     for arg in argv:
         if arg.find('=') > 0:
             arg_split = arg.split('=')
-            kwargs[arg_split[0]] = arg_split[1] if len(arg_split) > 1 else ''
+            kwargs[arg_split[0].strip()] = arg_split[1].strip() if len(arg_split) > 1 else ''
         else:
             args.append(arg)
             
     if kwargs:
         for key in kwargs:
-            if hasattr(command_instance, key):
-                setattr(command_instance, key, kwargs[key])
-    else:
-        properties = type(command_instance).__dict__.get('properties')
-        if properties:
-            for index in range(len(args) if len(args) < len(properties) else len(properties)):
-                setattr(command_instance, properties[index], args[index])
+            argument = command_instance._get_argument(key)
+            if argument:
+                argument.value = kwargs[key]
+    elif args:
+            arguments = command_instance._get_arguments()
+            for index in range(len(args) if len(args) < len(arguments) else len(arguments)):
+                arguments[index].value = args[index]
                 
 def get_current_user():
     user = getpass.getuser()
@@ -112,14 +112,15 @@ if __name__ == '__main__':
         if argv:
             parse_and_set_args(command_instance, argv)
             
-        result, message = command_instance.pre_check()
+        result = command_instance.pre_check()
+        if not result:
+            command_instance._show_command_info()
+            exit()
+            
+        result = command_instance.do_exec()
         if not result:
             exit()
             
-        result, message = command_instance.do_exec()
-        if not result:
-            exit()
-            
-        result, message = command_instance.verify()
+        result  = command_instance.verify()
         if not result:
             exit()
