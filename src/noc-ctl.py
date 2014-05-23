@@ -49,9 +49,9 @@ def show_sub_commands(all_command_module):
             
     print ''
 
-def find_command_module(all_command_module):
+def find_command_module(all_command_module, argv):
     arg_index = 1
-    for command in sys.argv[1:]:
+    for command in argv:
         arg_index = arg_index + 1
         if command in all_command_module:
             if isinstance(all_command_module.get(command), dict):
@@ -80,11 +80,21 @@ def parse_and_set_args(command_instance, argv):
         for key in kwargs:
             argument = command_instance._get_argument(key)
             if argument:
-                argument.value = kwargs[key]
+                try:
+                    value = argument.type(kwargs[key])
+                except ValueError:
+                    return False
+                argument.value = value
     elif args:
             arguments = command_instance._get_arguments()
             for index in range(len(args) if len(args) < len(arguments) else len(arguments)):
-                arguments[index].value = args[index]
+                try:
+                    value = arguments[index].type(args[index])
+                except ValueError:
+                    return False
+                arguments[index].value = value
+                
+    return True
                 
 def get_current_user():
     user = getpass.getuser()
@@ -98,7 +108,7 @@ if __name__ == '__main__':
     all_command_module = load_all_command_module(TOOLS_HOME + '/commands')
     
     # match command to python module
-    command_module, argv = find_command_module(all_command_module)
+    command_module, argv = find_command_module(all_command_module, sys.argv[1:])
     
     if command_module:
         # check user
@@ -110,7 +120,10 @@ if __name__ == '__main__':
             
         command_instance = getattr(command_module, 'command_class')()
         if argv:
-            parse_and_set_args(command_instance, argv)
+            if not parse_and_set_args(command_instance, argv):
+                print 'The command syntax is not correct, please refer to the introduction below\n'
+                command_instance._show_command_info()
+                exit()
             
         result = command_instance.pre_check()
         if result == -1:

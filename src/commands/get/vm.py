@@ -24,8 +24,8 @@ class GetVM(Command):
         return True
     
     def _regist_arguments(self):
-        self._regist_argumemt('id', 'int', default_value = None, help_info = 'vm id')
-        self._regist_argumemt('name', 'string', default_value = None, help_info = 'vm name')
+        self._regist_argumemt('id', int, default_value = None, help_info = 'vm id')
+        self._regist_argumemt('name', str, default_value = None, help_info = 'vm name')
 
 authenticate = lambda uname, uid, gid: True
 enable = True

@@ -29,9 +29,9 @@ class Command(object):
     
         for argument in self._get_arguments():
             if not argument.default_value:
-                _command = '%s [%s=]<%s>' % (_command, argument.name, argument.type)
+                _command = '%s [%s=]<%s>' % (_command, argument.name, argument.type.__name__)
             else:
-                _command = '%s [[%s=]<%s>]' % (_command, argument.name, argument.type)
+                _command = '%s [[%s=]<%s>]' % (_command, argument.name, argument.type.__name__)
                 
         print 'Usage: %s\n' % _command
         
@@ -39,7 +39,7 @@ class Command(object):
         print 'Arguments:'
         print _arg_format % ('<name>', '<type>', '<default value>', '<detail>')
         for argument in self._get_arguments():
-            print _arg_format % (argument.name, argument.type, argument.default_value, argument.help_info)
+            print _arg_format % (argument.name, argument.type.__name__, argument.default_value, argument.help_info)
         print ''
     
     def pre_check(self):

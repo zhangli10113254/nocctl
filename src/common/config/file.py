@@ -23,17 +23,23 @@ class FileConfig(object):
     
     def save(self):
         if self.exist():
-            # backup original file as temp file
+            # cp original file to temp file
             temp_file = self.file_path + '_temp'
-            os.rename(self.file_path, temp_file)
+            if os.system('cp -a %s %s' % (self.file_path, temp_file)) != 0:
+                raise IOError('Can not create temp file!')
             
-            # save new file
-            self._do_save(temp_file)
+            # save all config to temp file
+            self._do_save(self.file_path, temp_file)
             
-            # remove original file
+            # cover original file with temp file
+            if os.system('cp -a %s %s' % (temp_file, self.file_path)) != 0:
+                raise IOError('cover original file with temp file fail')
+            
+            # remove temp file
             os.remove(temp_file)
         else:
-            self._do_save()
+            # if config file is a new file, create and write directly
+            self._do_save(None, self.file_path)
     
     def _do_save(self, original_file = None):
         raise NotImplementedError()
@@ -65,8 +71,8 @@ class PropertyFileConfig(FileConfig):
                     value = line[split_index + 1:].strip()
                     self.params[key] = value
                     
-    def _do_save(self, original_file = None):
-        with open(self.file_path, 'w') as out_f:
+    def _do_save(self, original_file, temp_file):
+        with open(temp_file, 'w') as out_f:
             if original_file:
                 with open(original_file, 'r') as in_f:
                     for line in in_f:
