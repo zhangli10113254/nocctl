@@ -113,8 +113,11 @@ if __name__ == '__main__':
             parse_and_set_args(command_instance, argv)
             
         result = command_instance.pre_check()
-        if not result:
+        if result == -1:
+            print 'The command syntax is not correct, please refer to the introduction below\n'
             command_instance._show_command_info()
+            exit()
+        elif result != 0:
             exit()
             
         result = command_instance.do_exec()

@@ -9,7 +9,9 @@ class GetVM(Command):
         Command.__init__(self)
     
     def pre_check(self):
-        return self._get_argument('name').value is not None
+        if self._get_argument('id').value is None:
+            return -1
+        return 0
     
     def do_exec(self):
         print 'do_exec'
@@ -22,7 +24,7 @@ class GetVM(Command):
         return True
     
     def _regist_arguments(self):
-        self._regist_argumemt('id', 'int', default_value = 999, help_info = 'vm id')
+        self._regist_argumemt('id', 'int', default_value = None, help_info = 'vm id')
         self._regist_argumemt('name', 'string', default_value = None, help_info = 'vm name')
 
 authenticate = lambda uname, uid, gid: True

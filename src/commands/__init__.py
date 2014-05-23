@@ -1,3 +1,5 @@
+import sys
+
 class Command(object):
     
     def __init__(self):
@@ -20,7 +22,25 @@ class Command(object):
         raise NotImplementedError()
     
     def _show_command_info(self):
-        print 'command info'
+        _command_module = type(self).__dict__['__module__']
+        _command = 'noc-ctl'
+        for package in _command_module.split('.')[1:]:
+            _command = _command + ' ' + package
+    
+        for argument in self._get_arguments():
+            if not argument.default_value:
+                _command = '%s [%s=]<%s>' % (_command, argument.name, argument.type)
+            else:
+                _command = '%s [[%s=]<%s>]' % (_command, argument.name, argument.type)
+                
+        print 'Usage: %s\n' % _command
+        
+        _arg_format = '\t %-20s %-15s %-20s %s'
+        print 'Arguments:'
+        print _arg_format % ('<name>', '<type>', '<default value>', '<detail>')
+        for argument in self._get_arguments():
+            print _arg_format % (argument.name, argument.type, argument.default_value, argument.help_info)
+        print ''
     
     def pre_check(self):
         raise NotImplementedError()
@@ -47,7 +67,7 @@ class Argument(object):
         return self._type
     
     @property
-    def defautl_value(self):
+    def default_value(self):
         return self._default_value
     
     @property
@@ -60,6 +80,6 @@ class Argument(object):
     def _get_value(self):
         if hasattr(self, '_value'):
             return self._value
-        return self.defautl_value if self.defautl_value else None
+        return self.default_value if self.default_value else None
     
     value = property(_get_value, _set_value)
